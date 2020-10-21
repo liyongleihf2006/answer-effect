@@ -1,0 +1,32 @@
+.gold {
+    width: 76px;
+    height: 76px;
+    margin-left: 25px;
+    margin-right: 25px;
+}
+.gold-increment {
+    position: absolute;
+    color: #FFBA23;
+    animation: gold-increment 1s forwards;
+    opacity: 0;
+}
+
+@keyframes gold-increment {
+    0% {
+        margin-top: 0px;
+        opacity: 0;
+    }
+
+    40% {
+        opacity: 1;
+    }
+
+    60% {
+        opacity: 1;
+    }
+
+    100% {
+        margin-top: -20px;
+        opacity: 0;
+    }
+}

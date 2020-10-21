@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <link rel="stylesheet" href="./runball/index.css">
+        <link rel="stylesheet" href="./golds/index.css">
+        <style>
+            .pick-up-gold {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                height: 180px;
+                width: 100%;
+                background:
+                    left 0 bottom 34px url('./img/bg-left.png') no-repeat,
+                    right 0 bottom 34px url('./img/bg-right.png') no-repeat,
+                    left 0 bottom 0 url('./img/bg-grass.png') repeat-x,
+                    url('./img/bg-cloud.png');
+            }
+
+            .pick-up-gold::before {
+                content: '';
+                position: absolute;
+                display: block;
+                height: inherit;
+                width: 100%;
+                background-image: url('./img/bg-mushroom.png');
+                background-repeat: no-repeat;
+                background-position-x: 700px;
+                background-position-y: calc(100% - 34px);
+                animation: mushroom 6s infinite;
+            }
+
+            @keyframes mushroom {
+                0% {
+                    background-position-x: 700px;
+                }
+
+                50% {
+                    background-position-x: 600px;
+                }
+
+                100% {
+                    background-position-x: 700px;
+                }
+            }
+
+            .pick-up-person {
+                position: absolute;
+                width: 180px;
+                height: 200px;
+                bottom: 10px;
+            }
+
+            .pick-up-person-left {
+                left: 200px;
+            }
+
+            .pick-up-person-right {
+                right: 200px;
+            }
+
+            .gold-container {
+                height: inherit;
+                margin: auto;
+                text-align: center;
+            }
+
+            .target {
+                position: absolute;
+                top: 50px;
+                right: 100px;
+            }
+
+            .bomb {
+                margin-top: 100px;
+            }
+        </style>
+        <svg id="bomb" width="100" height="200" class="bomb" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+                <marker id="bomb-triangle" viewBox="0 0 100 100" refX="0" refY="50" markerUnits="strokeWidth"
+                    markerWidth="10" markerHeight="10" orient="auto">
+                    <circle cx="50" cy="50" r="50" />
+                    <text x="50" y="60" text-anchor="middle" fill="white" transform="rotate(-90 50 50)">05:08</text>
+                </marker>
+            </defs>
+            <path id="detonation-line" d="M 50 10 Q 52 12 50 15 Q 30 35 50 60 T 50 100 Q 45 105 45 110 L 45 130"
+                stroke-width="5" stroke="orange" fill="transparent" stroke-dashoffset="0"
+                marker-end="url(#bomb-triangle)">
+                <animate id="detonation-line-animate" attributeName="stroke-dashoffset" attributeType="XML" begin="0s"
+                    fill="freeze" from="0" />
+            </path>
+            <image x="-25" y="-25" width="50" height="50" xlink:href="./img/mars.png">
+                <animateMotion id="spark-animate" fill="freeze"
+                    path="M 50 10 Q 52 12 50 15 Q 30 35 50 60 T 50 100 Q 45 105 45 110 L 45 130" rotate="auto" />
+            </image>
+
+        </svg>
+        <div id="target" class="target">积分</div>
+        <div class="pick-up-gold">
+            <img class="pick-up-person pick-up-person-left" src="./img/left-person.png" />
+            <div class="gold-container"></div>
+            <img class="pick-up-person pick-up-person-right" src="./img/right-person.png" />
+        </div>
+        <script>
+            var dur = 3
+            var detonationLine = document.querySelector( '#detonation-line' )
+            var totalLength = detonationLine.getTotalLength()
+            detonationLine.setAttribute( 'stroke-dasharray', totalLength )
+            var detonationLineAnimate = document.querySelector( '#detonation-line-animate' )
+            detonationLineAnimate.setAttribute( 'to', -totalLength )
+            detonationLineAnimate.setAttribute( 'dur', dur )
+            var sparkAnimate = document.querySelector( '#spark-animate' )
+            sparkAnimate.setAttribute( 'dur', `${ dur }s` )
+            setTimeout( function () {
+                document.querySelector( '#bomb' ).remove()
+            }, dur * 1000 )
+        </script>
+        <script type="module">
+            import runball from './runball/index.js'
+            import golds from './golds/index.js'
+            var leftPerson = document.querySelector( '.pick-up-person-left' )
+            var rightPerson = document.querySelector( '.pick-up-person-right' )
+            var { right: startX, y: startY } = leftPerson.getBoundingClientRect()
+            var { x: endX, y: endY } = rightPerson.getBoundingClientRect()
+            var correct = false
+            runball( {
+                formatter() {
+                    var xmlns = 'http://www.w3.org/2000/svg'
+                    var xlink = 'http://www.w3.org/1999/xlink'
+                    var runballImage = document.createElementNS( xmlns, 'image' )
+                    runballImage.setAttribute( 'width', '60' )
+                    runballImage.setAttribute( 'height', '60' )
+                    runballImage.setAttribute( 'x', -30 )
+                    runballImage.setAttribute( 'y', -30 )
+                    runballImage.setAttributeNS( xlink, 'href', './img/fireball.png' )
+                    return [ runballImage ]
+                },
+                x1: startX, y1: startY, x2: endX, y2: endY, dur: '2s', count: 5, toScale: 1.5, done: function ( order ) { }
+            } ).then( function () {
+                golds( {
+                    count: 5,
+                    correct,
+                    img: './img/gold.png',
+                    container: document.querySelector( '.gold-container' ),
+                    leftPerson,
+                    rightPerson,
+                    onFinished() {
+                        var start = leftPerson
+                        var end = document.querySelector( '#target' )
+                        var { right: startX, y: startY } = start.getBoundingClientRect()
+                        var { x: endX, y: endY } = end.getBoundingClientRect()
+                        runball( {
+                            formatter() {
+                                var xmlns = 'http://www.w3.org/2000/svg'
+                                var xlink = 'http://www.w3.org/1999/xlink'
+                                var runballImage = document.createElementNS( xmlns, 'image' )
+                                runballImage.setAttribute( 'width', '40' )
+                                runballImage.setAttribute( 'height', '40' )
+                                runballImage.setAttribute( 'x', -20 )
+                                runballImage.setAttribute( 'y', -20 )
+                                runballImage.setAttributeNS( xlink, 'href', './img/increment-gold.png' )
+                                var runballText = document.createElementNS( xmlns, 'text' )
+                                runballText.classList.add( 'runball-text' )
+                                runballText.setAttribute( 'x', 0 )
+                                runballText.setAttribute( 'y', 10 )
+                                runballText.setAttribute( 'text-anchor', 'middle' )
+                                runballText.innerHTML = '+5'
+                                return [ runballImage, runballText ]
+                            },
+                            x1: startX, y1: startY, x2: endX, y2: endY, dur: '1.5s', count: 1, toScale: 1, done: function ( order ) {
+                                if ( order === 0 ) {
+                                    console.log( '第一个飞行小球结束' )
+                                }
+                            }
+                        } ).then( function () {
+                            console.log( '所有的飞行小球都结束了' )
+                        } )
+                    }
+                } )
+            } )
+        </script>
+    </body>
+
+</html>
